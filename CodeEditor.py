@@ -50,7 +50,7 @@ class PythonHighlighter(QSyntaxHighlighter):
             (QRegularExpression(r'".*?"'), string_format),
             (QRegularExpression(r"'.*?'"), string_format),
         ])
-        self.jscript : jedi.Script = jedi.Script(code=self.document().toPlainText())
+        
 
     def highlightBlock(self, text):
         for pattern, format in self.highlighting_rules:
@@ -65,6 +65,7 @@ class CodeEditor(QPlainTextEdit):
         self.completer = None
         self.highlighter = PythonHighlighter(self.document())
         self.setFont(QFont("Courier", 10))
+        self.jscript : jedi.Script = jedi.Script(code=self.document().toPlainText())
 
     def setCompleter(self, completer):
         if self.completer:
@@ -166,8 +167,9 @@ class CodeEditor(QPlainTextEdit):
         cursor.setPosition(end)        
         try:
             inferred = self.jscript.infer(line=start_line, column=start_column)
+            context = self.jscript.get_context(line=start_line, column=start_column).docstring()
             if inferred:
-                info = "\n".join([f"{i.name}: {i.description}" for i in inferred])
+                info = "\n".join([f"{i.name}: {i.description}" for i in inferred]) + context
                 if info:
                     cursor_rect = self.cursorRect(cursor)
                     global_pos = self.mapToGlobal(cursor_rect.bottomRight())
