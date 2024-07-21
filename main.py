@@ -51,6 +51,7 @@ class TextEditor(QMainWindow):
     def setup_terminal(self):
         self.terminal = Terminal(self)
         self.terminal.output.append("Terminal ready.")
+        self.cfont = self.terminal.font()
 
     def setup_layouts(self):
         self.main_splitter = QSplitter(Qt.Horizontal)
@@ -128,11 +129,12 @@ class TextEditor(QMainWindow):
                 new_tab.file_path = file_path
                 new_tab.setCompleter(self.completer)
                 new_tab.blockCountChanged.connect(self.update_completer)
+                new_tab.setFont(self.cfont)
                 tab_name = os.path.basename(file_path)
                 self.tab_widget.addTab(new_tab, tab_name)
                 self.tab_widget.setCurrentWidget(new_tab)
 
-            if file_path.endswith('.py'):
+            if file_path.__contains__('.py'):
                 self.update_completer()
             
     def update_terminal_directory(self, directory):
@@ -216,9 +218,28 @@ class TextEditor(QMainWindow):
         else:
             QMessageBox.warning(self, "Warning", "No file is currently open for saving.")
 
+    def zoom_in(self):
+        print("heellloo")
+        self.cfont = self.terminal.cfont()
+        self.cfont.setPointSize(self.cfont.pointSize() + 1)
+        self.terminal.setFont(self.cfont)
+        self.tab_widget.currentWidget().setFont(self.cfont)
+
+    def zoom_out(self):
+        self.cfont = self.terminal.font()
+        self.cfont.setPointSize(self.cfont.pointSize() - 1)
+        self.terminal.setFont(self.cfont)
+        self.tab_widget.currentWidget().setFont(self.cfont)
+
     def keyPressEvent(self, event):
         if event.matches(QKeySequence.Save):
             self.save_file()
+        
+        if event.matches(QKeySequence.ZoomIn):
+            self.zoom_in()
+
+        if event.matches(QKeySequence.ZoomOut):
+            self.zoom_out()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
