@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QLineEdit
 from PySide6.QtCore import Qt, QProcess, Signal
 from PySide6.QtGui import QTextCursor
 import shlex
+import jedi
 
 class InteractiveProcess(QProcess):
     output_ready = Signal(str)
@@ -33,6 +34,7 @@ class InteractiveProcess(QProcess):
         self.output_ready.emit(stderr)
 class Terminal(QWidget):
     def __init__(self, parent=None):
+        self.jscript : jedi.Script = None
         super().__init__(parent)
         self.layout = QVBoxLayout(self)
         self.setLayout(self.layout)

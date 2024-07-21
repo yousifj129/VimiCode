@@ -1,14 +1,14 @@
-from PySide6.QtWidgets import ( QPlainTextEdit, QCompleter, QTextEdit
+from PySide6.QtWidgets import ( QPlainTextEdit, QCompleter, QTextEdit, QToolTip
                                )
 from PySide6.QtCore import Qt,Signal
 from PySide6.QtGui import  QTextCharFormat, QFont, QSyntaxHighlighter, QTextCursor,QKeySequence
 from PySide6.QtCore import QRegularExpression
-
+import jedi
 class PythonHighlighter(QSyntaxHighlighter):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.highlighting_rules = []
-
+        
         keyword_format = QTextCharFormat()
         keyword_format.setForeground(Qt.darkBlue)
         keyword_format.setFontWeight(QFont.Bold)
@@ -50,6 +50,7 @@ class PythonHighlighter(QSyntaxHighlighter):
             (QRegularExpression(r'".*?"'), string_format),
             (QRegularExpression(r"'.*?'"), string_format),
         ])
+        self.jscript : jedi.Script = jedi.Script(code=self.document().toPlainText())
 
     def highlightBlock(self, text):
         for pattern, format in self.highlighting_rules:
@@ -140,3 +141,45 @@ class CodeEditor(QPlainTextEdit):
         cr.setWidth(self.completer.popup().sizeHintForColumn(0) +
                     self.completer.popup().verticalScrollBar().sizeHint().width())
         self.completer.complete(cr)
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        self.showJediInfoForSelection()
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+        self.showJediInfoForSelection()
+
+    def keyReleaseEvent(self, event):
+        super().keyReleaseEvent(event)
+        if event.key() in (Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down):
+            self.showJediInfoForSelection()
+    def showJediInfoForSelection(self):
+        cursor = self.textCursor()
+        start = cursor.selectionStart()
+        end = cursor.selectionEnd()
+        # Get the line and column for the start of the selection
+        cursor.setPosition(start)
+        start_line = cursor.blockNumber()
+        start_column = cursor.columnNumber()
+        # Get the line and column for the end of the selection
+        cursor.setPosition(end)        
+        try:
+            inferred = self.jscript.infer(line=start_line, column=start_column)
+            if inferred:
+                info = "\n".join([f"{i.name}: {i.description}" for i in inferred])
+                if info:
+                    cursor_rect = self.cursorRect(cursor)
+                    global_pos = self.mapToGlobal(cursor_rect.bottomRight())
+                    QToolTip.showText(global_pos, info, self)
+                else:
+                    QToolTip.hideText()
+            else:
+                QToolTip.hideText()
+        except Exception as e:
+            print(f"Jedi inference error: {e}")
+            QToolTip.hideText()
+
+    def leaveEvent(self, event):
+        super().leaveEvent(event)
+        QToolTip.hideText()

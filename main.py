@@ -134,7 +134,7 @@ class TextEditor(QMainWindow):
                 self.tab_widget.addTab(new_tab, tab_name)
                 self.tab_widget.setCurrentWidget(new_tab)
 
-            if file_path.__contains__('.py'):
+            
                 self.update_completer()
             
     def update_terminal_directory(self, directory):
@@ -148,9 +148,12 @@ class TextEditor(QMainWindow):
         if isinstance(current_tab, CodeEditor) and current_tab.file_path.endswith('.py'):
             line, column = current_tab.get_current_line_column()
             script = jedi.Script(path=current_tab.file_path)
+            
             completions = script.complete(line=line, column=column)
             words = [c.name for c in completions]
             self.completer.model().setStringList(words)
+            self.tab_widget.currentWidget().jscript = script
+            self.terminal.jscript = script
 
     def show_context_menu(self, position):
         index = self.tree.indexAt(position)
