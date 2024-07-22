@@ -9,6 +9,9 @@ from PySide6.QtGui import QAction,QKeySequence, QShortcut
 import jedi
 from PySide6.QtWidgets import QCompleter
 import subprocess
+
+import jedi.api
+import jedi.api.environment
 from Terminal import Terminal
 from CodeEditor import CodeEditor
 class TextEditor(QMainWindow):
@@ -144,7 +147,7 @@ class TextEditor(QMainWindow):
 		current_tab = self.tab_widget.currentWidget()
 		if isinstance(current_tab, CodeEditor) and current_tab.file_path.endswith('.py'):
 			line, column = current_tab.get_current_line_column()
-			script = jedi.Script(path=current_tab.file_path)
+			script = jedi.Script(path=current_tab.file_path, environment=jedi.api.environment.get_default_environment())
 			completions = script.complete(line=line, column=column)
 			words = [c.name for c in completions]
 			self.completer.model().setStringList(words)
