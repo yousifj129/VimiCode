@@ -1,13 +1,14 @@
+import shutil
 import os
-import subprocess
+import shlex
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QLineEdit
 from PySide6.QtCore import Qt, QProcess, Signal
 from PySide6.QtGui import QTextCursor
-import shlex
 import jedi
 
 class InteractiveProcess(QProcess):
     output_ready = Signal(str)
+    error_occurred = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -17,12 +18,23 @@ class InteractiveProcess(QProcess):
     def start_command(self, command):
         if not command.strip():
             return  # Don't try to execute empty commands
-        if isinstance(command, str):
-            command = shlex.split(command)
-        if command:
-            program = command[0]
-            args = command[1:]
+
+        command_list = shlex.split(command)
+        if command_list:
+            program = command_list[0]
+            args = command_list[1:]
+
+            # Check if the program exists
+            if not self.is_command_valid(program):
+                self.error_occurred.emit(f"Error: Command '{program}' not found.\n")
+                return
+
             super().start(program, args)
+
+    def is_command_valid(self, command):
+        """ Check if the command exists in the system's PATH. """
+        return shutil.which(command) is not None
+
     def handle_stdout(self):
         data = self.readAllStandardOutput()
         stdout = bytes(data).decode("utf8")
@@ -32,13 +44,13 @@ class InteractiveProcess(QProcess):
         data = self.readAllStandardError()
         stderr = bytes(data).decode("utf8")
         self.output_ready.emit(stderr)
+
+
 class Terminal(QWidget):
     def __init__(self, parent=None):
-        self.jscript : jedi.Script = None
         super().__init__(parent)
         self.layout = QVBoxLayout(self)
         self.setLayout(self.layout)
-        print("Terminal widget initialized")
 
         self.output = QTextEdit(self)
         self.output.setReadOnly(True)
@@ -59,27 +71,31 @@ class Terminal(QWidget):
 
     def run_command(self):
         command = self.input.text()
-        self.output.append(f"{self.current_directory}$ {command}")
-        self.output.append("\n")
-        self.input.clear()
-        
         self.command_history.append(command)
         self.history_index = len(self.command_history)
         
+        self.output.moveCursor(QTextCursor.End)
+        self.output.insertPlainText(f"\n{self.current_directory}$ {command}\n")
+        self.input.clear()
+
         if command.startswith("cd "):
             self.change_directory(command[3:])
         else:
             self.process = InteractiveProcess(self)
             self.process.output_ready.connect(self.handle_output)
+            self.process.error_occurred.connect(self.handle_error)
             self.process.finished.connect(self.process_finished)
             self.process.setWorkingDirectory(self.current_directory)
             self.process.start_command(command)
-        
+
     def handle_output(self, output):
         self.output.moveCursor(QTextCursor.End)
         self.output.insertPlainText(output)
+
+    def handle_error(self, error_message):
         self.output.moveCursor(QTextCursor.End)
-        
+        self.output.insertPlainText(error_message)
+
     def process_finished(self):
         self.process = None
         self.update_prompt()
@@ -119,17 +135,15 @@ class Terminal(QWidget):
         try:
             os.chdir(os.path.join(self.current_directory, new_dir))
             self.current_directory = os.getcwd()
-            self.output.append(f"Changed directory to: {self.current_directory}")
+            self.output.moveCursor(QTextCursor.End)
+            self.output.insertPlainText(f"Changed directory to: {self.current_directory}\n")
         except FileNotFoundError:
-            self.output.append(f"Directory not found: {new_dir}")
+            self.output.moveCursor(QTextCursor.End)
+            self.output.insertPlainText(f"Directory not found: {new_dir}\n")
         except PermissionError:
-            self.output.append(f"Permission denied: {new_dir}")
+            self.output.moveCursor(QTextCursor.End)
+            self.output.insertPlainText(f"Permission denied: {new_dir}\n")
         self.update_prompt()
     
     def update_prompt(self):
-        self.output.append(f"\n{self.current_directory}$ ")
-    
-    def set_working_directory(self, directory):
-        self.current_directory = directory
-        os.chdir(self.current_directory)
-        self.update_prompt()
+        self.output.moveCursor(QTextCursor.End)
