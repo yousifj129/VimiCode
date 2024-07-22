@@ -222,8 +222,7 @@ class TextEditor(QMainWindow):
             QMessageBox.warning(self, "Warning", "No file is currently open for saving.")
 
     def zoom_in(self):
-        print("heellloo")
-        self.cfont = self.terminal.cfont()
+        self.cfont = self.terminal.font()
         self.cfont.setPointSize(self.cfont.pointSize() + 1)
         self.terminal.setFont(self.cfont)
         self.tab_widget.currentWidget().setFont(self.cfont)
@@ -237,8 +236,8 @@ class TextEditor(QMainWindow):
     def keyPressEvent(self, event):
         if event.matches(QKeySequence.Save):
             self.save_file()
-        
         if event.matches(QKeySequence.ZoomIn):
+            print("hello ")
             self.zoom_in()
 
         if event.matches(QKeySequence.ZoomOut):

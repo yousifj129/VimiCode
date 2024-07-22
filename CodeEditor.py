@@ -32,7 +32,7 @@ class PythonHighlighter(QSyntaxHighlighter):
 
         function_format = QTextCharFormat()
         function_format.setFontItalic(True)
-        function_format.setForeground(Qt.blue)
+        function_format.setForeground(Qt.darkRed)
         self.highlighting_rules.append((
             QRegularExpression(r'\bdef\b\s*(\w+)'),
             function_format
@@ -168,7 +168,7 @@ class CodeEditor(QPlainTextEdit):
         end = cursor.selectionEnd()
         # Get the line and column for the start of the selection
         cursor.setPosition(start)
-        start_line = cursor.blockNumber()
+        start_line = cursor.blockNumber() + 1
         start_column = cursor.columnNumber()
         # Get the line and column for the end of the selection
         cursor.setPosition(end)        
