@@ -17,10 +17,11 @@ class PythonHighlighter(QSyntaxHighlighter):
                     "from", "global", "if", "import", "in", "is", "lambda",
                     "None", "nonlocal", "not", "or", "pass", "raise", "return",
                     "True", "try", "while", "with", "yield"]
+        
         for word in keywords:
             pattern = QRegularExpression(r'\b' + word + r'\b')
             self.highlighting_rules.append((pattern, keyword_format))
-
+        
         class_format = QTextCharFormat()
         class_format.setFontWeight(QFont.Bold)
         class_format.setForeground(Qt.darkMagenta)
@@ -51,7 +52,10 @@ class PythonHighlighter(QSyntaxHighlighter):
             (QRegularExpression(r"'.*?'"), string_format),
         ])
         
-
+    def newRules(self, words, keyword_format):
+        for word in words:
+            pattern = QRegularExpression(r'\b' + word + r'\b')
+            self.highlighting_rules.append((pattern, keyword_format))
     def highlightBlock(self, text):
         for pattern, format in self.highlighting_rules:
             match_iterator = pattern.globalMatch(text)
@@ -66,6 +70,9 @@ class CodeEditor(QPlainTextEdit):
         self.highlighter = PythonHighlighter(self.document())
         self.setFont(QFont("Courier", 10))
         self.jscript : jedi.Script = jedi.Script(code=self.document().toPlainText())
+        self.words : list[str] = []
+
+        self.blockCountChanged.connect(self.onBlockCountChanged)
 
     def setCompleter(self, completer):
         if self.completer:
@@ -181,7 +188,17 @@ class CodeEditor(QPlainTextEdit):
         except Exception as e:
             print(f"Jedi inference error: {e}")
             QToolTip.hideText()
+    def onBlockCountChanged(self):
+        names = self.jscript.get_names()
+        for word in names:
+            if not self.words.__contains__(word.name):
+                self.words.append(word.name)
 
+        
+        keyword_format = QTextCharFormat()
+        keyword_format.setForeground(Qt.red)
+        keyword_format.setFontWeight(QFont.Bold)
+        self.highlighter.newRules(words=self.words, keyword_format=keyword_format)
     def leaveEvent(self, event):
         super().leaveEvent(event)
         QToolTip.hideText()
