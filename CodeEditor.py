@@ -4,6 +4,8 @@ from PySide6.QtCore import Qt,Signal
 from PySide6.QtGui import  QTextCharFormat, QFont, QSyntaxHighlighter, QTextCursor,QKeySequence, QColor
 from PySide6.QtCore import QRegularExpression
 import jedi
+import re
+
 class PythonHighlighter(QSyntaxHighlighter):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -73,6 +75,7 @@ class CodeEditor(QPlainTextEdit):
         self.words : list[str] = []
         self.setTabStopDistance(self.font().pointSize()*3)
         # self.blockCountChanged.connect(self.onBlockCountChanged)
+        self.convert_spaces_to_tabs()
 
     def setCompleter(self, completer):
         if self.completer:
@@ -99,7 +102,12 @@ class CodeEditor(QPlainTextEdit):
         tc = self.textCursor()
         tc.select(QTextCursor.SelectionType.WordUnderCursor)
         return tc.selectedText()
-
+    def convert_spaces_to_tabs(self):
+        content = self.toPlainText()
+        converted_content = content.replace('    ', '\t')
+        
+        # Set the converted content back to the editor
+        self.setPlainText(converted_content)
     def focusInEvent(self, event):
         if self.completer:
             self.completer.setWidget(self)
@@ -162,6 +170,17 @@ class CodeEditor(QPlainTextEdit):
         super().keyReleaseEvent(event)
         if event.key() in (Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down):
             self.showJediInfoForSelection()
+        if event.key() == Qt.Key.Key_QuoteDbl:  # Check if the pressed key is a double quote
+            cursor = self.textCursor()
+            cursor.insertText('"')
+            cursor.movePosition(QTextCursor.MoveOperation.Left, QTextCursor.MoveMode.MoveAnchor, 1)
+            self.setTextCursor(cursor)
+        if event.key() == Qt.Key.Key_ParenLeft:  # Check if the pressed key is a double quote
+            cursor = self.textCursor()
+            cursor.insertText(')')
+            cursor.movePosition(QTextCursor.MoveOperation.Left, QTextCursor.MoveMode.MoveAnchor, 1)
+            self.setTextCursor(cursor)
+
     def showJediInfoForSelection(self):
         cursor = self.textCursor()
         start = cursor.selectionStart()
