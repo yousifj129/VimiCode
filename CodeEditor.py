@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import ( QPlainTextEdit, QCompleter, QTextEdit, QToolTip
                                )
 from PySide6.QtCore import Qt,Signal
-from PySide6.QtGui import  QTextCharFormat, QFont, QSyntaxHighlighter, QTextCursor,QKeySequence
+from PySide6.QtGui import  QTextCharFormat, QFont, QSyntaxHighlighter, QTextCursor,QKeySequence, QColor
 from PySide6.QtCore import QRegularExpression
 import jedi
 class PythonHighlighter(QSyntaxHighlighter):
@@ -16,7 +16,7 @@ class PythonHighlighter(QSyntaxHighlighter):
                     "del", "elif", "else", "except", "False", "finally", "for",
                     "from", "global", "if", "import", "in", "is", "lambda",
                     "None", "nonlocal", "not", "or", "pass", "raise", "return",
-                    "True", "try", "while", "with", "yield"]
+                    "True", "try", "while", "with", "yield", "self"]
         
         for word in keywords:
             pattern = QRegularExpression(r'\b' + word + r'\b')
@@ -26,15 +26,15 @@ class PythonHighlighter(QSyntaxHighlighter):
         class_format.setFontWeight(QFont.Bold)
         class_format.setForeground(Qt.darkMagenta)
         self.highlighting_rules.append((
-            QRegularExpression(r'\bclass\b\s*(\w+)'),
+            QRegularExpression(r'(?<=class\s)([A-Za-z_][A-Za-z0-9_]*)'),
             class_format
         ))
 
         function_format = QTextCharFormat()
         function_format.setFontItalic(True)
-        function_format.setForeground(Qt.darkRed)
+        function_format.setForeground(QColor("#FFD700"))
         self.highlighting_rules.append((
-            QRegularExpression(r'\bdef\b\s*(\w+)'),
+            QRegularExpression(r"(?<=def\s)([A-Za-z_][A-Za-z0-9_]*)"),
             function_format
         ))
 
@@ -71,8 +71,8 @@ class CodeEditor(QPlainTextEdit):
         self.setFont(QFont("Courier", 10))
         self.jscript : jedi.Script = jedi.Script(code=self.document().toPlainText())
         self.words : list[str] = []
-
-        self.blockCountChanged.connect(self.onBlockCountChanged)
+        self.setTabStopDistance(self.font().pointSize()*3)
+        # self.blockCountChanged.connect(self.onBlockCountChanged)
 
     def setCompleter(self, completer):
         if self.completer:
@@ -188,17 +188,17 @@ class CodeEditor(QPlainTextEdit):
         except Exception as e:
             print(f"Jedi inference error: {e}")
             QToolTip.hideText()
-    def onBlockCountChanged(self):
-        names = self.jscript.get_names()
-        for word in names:
-            if not self.words.__contains__(word.name):
-                self.words.append(word.name)
+    # def onBlockCountChanged(self):
+    #     names = self.jscript.get_names()
+    #     for word in names:
+    #         if not self.words.__contains__(word.name):
+    #             self.words.append(word.name)
 
         
-        keyword_format = QTextCharFormat()
-        keyword_format.setForeground(Qt.red)
-        keyword_format.setFontWeight(QFont.Bold)
-        self.highlighter.newRules(words=self.words, keyword_format=keyword_format)
+    #     keyword_format = QTextCharFormat()
+    #     keyword_format.setForeground(Qt.red)
+    #     keyword_format.setFontWeight(QFont.Bold)
+    #     self.highlighter.newRules(words=self.words, keyword_format=keyword_format)
     def leaveEvent(self, event):
         super().leaveEvent(event)
         QToolTip.hideText()

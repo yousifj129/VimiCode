@@ -227,6 +227,7 @@ class TextEditor(QMainWindow):
         self.cfont.setPointSize(self.cfont.pointSize() + 1)
         self.terminal.setFont(self.cfont)
         self.tab_widget.currentWidget().setFont(self.cfont)
+        self.tab_widget.currentWidget().setTabStopDistance(self.cfont.pointSize() * 3)
 
     def zoom_out(self):
         # Ensure the current widget is not None
@@ -237,6 +238,8 @@ class TextEditor(QMainWindow):
         self.cfont.setPointSize(self.cfont.pointSize() - 1)
         self.terminal.setFont(self.cfont)
         self.tab_widget.currentWidget().setFont(self.cfont)
+        self.tab_widget.currentWidget().setTabStopDistance(self.cfont.pointSize() * 3)
+
 
     def setup_shortcuts(self):
         """Setup shortcuts for zooming in/out and saving files."""
