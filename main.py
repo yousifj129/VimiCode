@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QTextEdit, QTreeView,
                                QMenuBar, QMenu, QFileDialog, QCompleter
                                , QTabWidget, QMessageBox,QInputDialog)
 from PySide6.QtCore import Qt, QDir, QStringListModel,QPoint
-from PySide6.QtGui import QAction,QKeySequence
+from PySide6.QtGui import QAction,QKeySequence, QShortcut
 import jedi
 from PySide6.QtWidgets import QCompleter
 import subprocess
@@ -21,6 +21,7 @@ class TextEditor(QMainWindow):
         self.setup_terminal()
         self.setup_layouts()
         self.connect_signals()
+        self.setup_shortcuts()
 
     def init_ui(self):
         self.setWindowTitle("Python Text Editor")
@@ -80,8 +81,6 @@ class TextEditor(QMainWindow):
         self.tree.clicked.connect(self.open_file)
         self.tree.doubleClicked.connect(self.open_file)
         
-        
-
     def create_menu_bar(self):
         menu_bar = QMenuBar(self)
         self.setMenuBar(menu_bar)
@@ -102,8 +101,6 @@ class TextEditor(QMainWindow):
         save_action = QAction("&Save", self)
         save_action.triggered.connect(self.save_file)
         file_menu.addAction(save_action)
-
-        
 
     def open_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Select Folder")
@@ -222,26 +219,36 @@ class TextEditor(QMainWindow):
             QMessageBox.warning(self, "Warning", "No file is currently open for saving.")
 
     def zoom_in(self):
+        # Ensure the current widget is not None
+        if not self.tab_widget.currentWidget():
+            return
+
         self.cfont = self.terminal.font()
         self.cfont.setPointSize(self.cfont.pointSize() + 1)
         self.terminal.setFont(self.cfont)
         self.tab_widget.currentWidget().setFont(self.cfont)
 
     def zoom_out(self):
+        # Ensure the current widget is not None
+        if not self.tab_widget.currentWidget():
+            return
+
         self.cfont = self.terminal.font()
         self.cfont.setPointSize(self.cfont.pointSize() - 1)
         self.terminal.setFont(self.cfont)
         self.tab_widget.currentWidget().setFont(self.cfont)
 
-    def keyPressEvent(self, event):
-        if event.matches(QKeySequence.Save):
-            self.save_file()
-        if event.matches(QKeySequence.ZoomIn):
-            print("hello ")
-            self.zoom_in()
+    def setup_shortcuts(self):
+        """Setup shortcuts for zooming in/out and saving files."""
+        # Zoom in
+        QShortcut(QKeySequence.StandardKey.ZoomIn, self, self.zoom_in)
+        QShortcut(QKeySequence(Qt.CTRL | Qt.Key_Equal), self, self.zoom_in) # Ctrl + '='
 
-        if event.matches(QKeySequence.ZoomOut):
-            self.zoom_out()
+        # Zoom out
+        QShortcut(QKeySequence.StandardKey.ZoomOut, self, self.zoom_out)
+
+        # Save
+        QShortcut(QKeySequence.StandardKey.Save, self, self.save_file)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
