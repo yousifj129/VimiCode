@@ -12,7 +12,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         self.highlighting_rules = []
         
         keyword_format = QTextCharFormat()
-        keyword_format.setForeground(Qt.darkBlue)
+        keyword_format.setForeground(QColor("#007acc"))
         keyword_format.setFontWeight(QFont.Bold)
         keywords = ["and", "as", "assert", "break", "class", "continue", "def",
                     "del", "elif", "else", "except", "False", "finally", "for",
@@ -168,6 +168,31 @@ class CodeEditor(QPlainTextEdit):
 
     def keyReleaseEvent(self, event):
         super().keyReleaseEvent(event)
+
+        # stay in the same column when pressing enter
+        if event.key() == Qt.Key.Key_Return or event.key() == Qt.Key.Key_Enter:
+            cursor = self.textCursor()
+            block = cursor.block()
+            
+            # Get the previous block (line)
+            previous_block = block.previous()
+            
+            if previous_block.isValid():
+                previous_line = previous_block.text()
+                indent = len(previous_line) - len(previous_line.lstrip('\t'))
+                
+                # Call the parent method to insert a new line
+                super().keyPressEvent(event)
+                
+                # Insert the same number of tabs as the previous line
+                self.insertPlainText('\t' * indent)
+                
+                # If the previous line ends with ':', add an extra tab
+                if previous_line.strip().endswith(':'):
+                    self.insertPlainText('\t')
+            return
+        
+        
         if event.key() in (Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down):
             self.showJediInfoForSelection()
 
