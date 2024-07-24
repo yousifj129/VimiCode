@@ -170,6 +170,7 @@ class CodeEditor(QPlainTextEdit):
         super().keyReleaseEvent(event)
         if event.key() in (Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down):
             self.showJediInfoForSelection()
+
         if event.key() == Qt.Key.Key_QuoteDbl:  # Check if the pressed key is a double quote
             cursor = self.textCursor()
             cursor.insertText('"')
@@ -205,8 +206,8 @@ class CodeEditor(QPlainTextEdit):
             else:
                 QToolTip.hideText()
         except Exception as e:
-            print(f"Jedi inference error: {e}")
             QToolTip.hideText()
+            pass
     # def onBlockCountChanged(self):
     #     names = self.jscript.get_names()
     #     for word in names:

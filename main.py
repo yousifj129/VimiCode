@@ -148,12 +148,14 @@ class TextEditor(QMainWindow):
 		if isinstance(current_tab, CodeEditor) and current_tab.file_path.endswith('.py'):
 			line, column = current_tab.get_current_line_column()
 			script = jedi.Script(path=current_tab.file_path, environment=jedi.api.environment.get_default_environment())
-			completions = script.complete(line=line, column=column)
-			words = [c.name for c in completions]
-			self.completer.model().setStringList(words)
-			self.tab_widget.currentWidget().jscript = script
-			self.terminal.jscript = script
-			
+			try:
+				completions = script.complete(line=line, column=column)
+				words = [c.name for c in completions]
+				self.completer.model().setStringList(words)
+				self.tab_widget.currentWidget().jscript = script
+				self.terminal.jscript = script
+			except:
+				pass
 
 	def show_context_menu(self, position):
 		index = self.tree.indexAt(position)
