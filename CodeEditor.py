@@ -26,7 +26,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         
         type_format = QTextCharFormat()
         type_format.setForeground(QColor("#425df5"))
-        type_format.setFontWeight(QFont.Bold)
+        
         types = ["list", "dict", " tuple", "set", "bool", "int", "float", "str", "NoneType"]
 
         for word in types:
@@ -49,6 +49,21 @@ class PythonHighlighter(QSyntaxHighlighter):
             QRegularExpression(r"(?<=def\s)([A-Za-z_][A-Za-z0-9_]*)"),
             function_format
         ))
+
+        builtin_func_format = QTextCharFormat()
+        builtin_func_format.setForeground(QColor("#ffdf33"))
+
+        builtin_funcs = ["abs", "ascii" ,"enumerate","exec"
+                        ,"format", "hash","help","hex",
+                        "input", "isinstance","issubclass", "map",
+                        "max", "min", "next", "oct", "ord", "pow",
+                        "print", "range", "round", "sorted", "sum",
+                        "unichr", "unicode", "vars", "zip",
+                        "__import__", "divmod"]
+
+        for word in builtin_funcs:
+            pattern = QRegularExpression(r'\b' + word + r'\b')
+            self.highlighting_rules.append((pattern, builtin_func_format))
 
         comment_format = QTextCharFormat()
         comment_format.setForeground(Qt.darkGreen)

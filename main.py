@@ -83,6 +83,7 @@ class TextEditor(QMainWindow):
 		self.tree.clicked.connect(self.open_file)
 		self.tree.doubleClicked.connect(self.open_file)
 		
+		
 	def create_menu_bar(self):
 		menu_bar = QMenuBar(self)
 		self.setMenuBar(menu_bar)
@@ -129,6 +130,7 @@ class TextEditor(QMainWindow):
 				new_tab.setCompleter(self.completer)
 				new_tab.blockCountChanged.connect(self.update_completer)
 				new_tab.setFont(self.cfont)
+				new_tab.textChanged.connect(self.updateCompleterWords)
 				tab_name = os.path.basename(file_path)
 				self.tab_widget.addTab(new_tab, tab_name)
 				self.tab_widget.setCurrentWidget(new_tab)
@@ -149,16 +151,21 @@ class TextEditor(QMainWindow):
 			current_tab = self.tab_widget.currentWidget()
 			if isinstance(current_tab, CodeEditor) and current_tab.file_path.endswith('.py'):
 				line, column = current_tab.get_current_line_column()
-				script = jedi.Script(path=current_tab.file_path, environment=jedi.api.environment.get_default_environment())
+				self.script = jedi.Script(path=current_tab.file_path, environment=jedi.api.environment.get_default_environment())
 				try:
-					completions = script.complete(line=line, column=column)
+					completions = self.script.complete(line=line, column=column)
 					words = [c.name for c in completions]
 					self.completer.model().setStringList(words)
-					self.tab_widget.currentWidget().jscript = script
-					self.terminal.jscript = script
+					self.tab_widget.currentWidget().jscript = self.script
+					self.terminal.jscript = self.script
 				except:
 					pass
-
+	def updateCompleterWords(self):
+		current_tab = self.tab_widget.currentWidget()
+		line, column = current_tab.get_current_line_column()
+		completions = self.script.complete(line=line, column=column)
+		words = [c.name for c in completions]
+		self.completer.model().setStringList(words)
 	def show_context_menu(self, position):
 		index = self.tree.indexAt(position)
 		if not index.isValid():
