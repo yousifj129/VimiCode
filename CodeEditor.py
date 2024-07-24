@@ -24,6 +24,16 @@ class PythonHighlighter(QSyntaxHighlighter):
             pattern = QRegularExpression(r'\b' + word + r'\b')
             self.highlighting_rules.append((pattern, keyword_format))
         
+        type_format = QTextCharFormat()
+        type_format.setForeground(QColor("#425df5"))
+        type_format.setFontWeight(QFont.Bold)
+        types = ["list", "dict", " tuple", "set", "bool", "int", "float", "str", "NoneType"]
+
+        for word in types:
+            pattern = QRegularExpression(r'\b' + word + r'\b')
+            self.highlighting_rules.append((pattern, type_format))
+
+
         class_format = QTextCharFormat()
         class_format.setFontWeight(QFont.Bold)
         class_format.setForeground(Qt.darkMagenta)
@@ -233,6 +243,7 @@ class CodeEditor(QPlainTextEdit):
         except Exception as e:
             QToolTip.hideText()
             pass
+
     # def onBlockCountChanged(self):
     #     names = self.jscript.get_names()
     #     for word in names:

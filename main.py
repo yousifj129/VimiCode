@@ -103,7 +103,7 @@ class TextEditor(QMainWindow):
 		save_action = QAction("&Save", self)
 		save_action.triggered.connect(self.save_file)
 		file_menu.addAction(save_action)
-
+	
 	def open_folder(self):
 		folder = QFileDialog.getExistingDirectory(self, "Select Folder")
 		if folder:
@@ -142,20 +142,22 @@ class TextEditor(QMainWindow):
 
 	def close_tab(self, index):
 		self.tab_widget.removeTab(index)
-
+	blockCounter = 5
 	def update_completer(self):
-		current_tab = self.tab_widget.currentWidget()
-		if isinstance(current_tab, CodeEditor) and current_tab.file_path.endswith('.py'):
-			line, column = current_tab.get_current_line_column()
-			script = jedi.Script(path=current_tab.file_path, environment=jedi.api.environment.get_default_environment())
-			try:
-				completions = script.complete(line=line, column=column)
-				words = [c.name for c in completions]
-				self.completer.model().setStringList(words)
-				self.tab_widget.currentWidget().jscript = script
-				self.terminal.jscript = script
-			except:
-				pass
+		self.blockCounter += 1
+		if self.blockCounter >= 5:
+			current_tab = self.tab_widget.currentWidget()
+			if isinstance(current_tab, CodeEditor) and current_tab.file_path.endswith('.py'):
+				line, column = current_tab.get_current_line_column()
+				script = jedi.Script(path=current_tab.file_path, environment=jedi.api.environment.get_default_environment())
+				try:
+					completions = script.complete(line=line, column=column)
+					words = [c.name for c in completions]
+					self.completer.model().setStringList(words)
+					self.tab_widget.currentWidget().jscript = script
+					self.terminal.jscript = script
+				except:
+					pass
 
 	def show_context_menu(self, position):
 		index = self.tree.indexAt(position)
@@ -259,6 +261,7 @@ class TextEditor(QMainWindow):
 		QShortcut(QKeySequence.StandardKey.Save, self, self.save_file)
 
 if __name__ == "__main__":
+
 	app = QApplication(sys.argv)
 	editor = TextEditor()
 	editor.show()
