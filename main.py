@@ -140,7 +140,7 @@ class TextEditor(QMainWindow):
 				self.update_completer()
 			
 	def update_terminal_directory(self, directory):
-		self.terminal.set_working_directory(directory)
+		self.terminal.change_directory(directory)
 
 	def close_tab(self, index):
 		self.tab_widget.removeTab(index)
