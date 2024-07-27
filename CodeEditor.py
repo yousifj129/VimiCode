@@ -118,10 +118,11 @@ class CodeEditor(QPlainTextEdit):
             return
         tc = self.textCursor()
         extra = len(completion) - len(self.completer.completionPrefix())
-        tc.movePosition(QTextCursor.MoveOperation.Left)
-        tc.movePosition(QTextCursor.MoveOperation.EndOfWord)
-        tc.insertText(completion[-extra:])
-        self.setTextCursor(tc)
+        if extra > 0:
+            tc.movePosition(QTextCursor.MoveOperation.Left)
+            tc.movePosition(QTextCursor.MoveOperation.EndOfWord)
+            tc.insertText(completion[-extra:])
+            self.setTextCursor(tc)
 
     def textUnderCursor(self):
         tc = self.textCursor()
