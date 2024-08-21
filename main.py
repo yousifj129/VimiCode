@@ -53,7 +53,7 @@ class TextEditor(QMainWindow):
 
 	def setup_terminal(self):
 		self.terminal = Terminal(self)
-		self.terminal.output.append("Terminal ready.")
+		self.terminal.insert_text("Terminal ready.")
 		self.cfont = self.terminal.font()
 
 	def setup_layouts(self):
@@ -226,7 +226,7 @@ class TextEditor(QMainWindow):
 			try:
 				with open(current_tab.file_path, 'w') as file:
 					file.write(current_tab.toPlainText())
-				self.terminal.output.append(f"File saved: {current_tab.file_path}")
+				self.terminal.insert_text(f"File saved: {current_tab.file_path}")
 			except IOError:
 				QMessageBox.critical(self, "Error", f"Unable to save file: {current_tab.file_path}")
 		else:
